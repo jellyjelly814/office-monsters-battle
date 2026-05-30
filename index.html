@@ -284,6 +284,44 @@
     max-width: 480px;
     margin-top: -4px;
   }
+
+  /* 顶部右侧重启按钮 */
+  .restart-btn {
+    margin-left: auto;
+    align-self: center;
+    background: rgba(255, 255, 255, 0.06);
+    color: #6ec;
+    border: 1px solid #444;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: inherit;
+    padding: 0;
+    transition: transform 0.4s ease, background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  }
+  .restart-btn:hover {
+    background: rgba(110, 238, 204, 0.18);
+    border-color: #6ec;
+    color: #fff;
+    transform: rotate(-180deg);
+  }
+
+  /* 重启确认弹窗里的取消按钮 */
+  .secondary-btn {
+    background: #444 !important;
+    color: #ccc !important;
+  }
+  .secondary-btn:hover {
+    background: #555 !important;
+    color: #fff !important;
+  }
+  .btn-row { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; }
 </style>
 </head>
 <body>
@@ -291,6 +329,7 @@
   <div class="header">
     <h1>职场牛鬼蛇神大作战</h1>
     <span class="hint">AI 提效 VS 职场牛鬼蛇神 ·  60s，AI 替你把班味打下去！</span>
+    <button id="btn-restart" class="restart-btn" title="重新开始" aria-label="重新开始">↻</button>
   </div>
   <div class="game-wrap">
     <canvas id="game-canvas"></canvas>
@@ -350,9 +389,27 @@
         <img id="end-player" class="end-figure" src="" alt="" style="display:none;">
       </div>
     </div>
+
+    <!-- 重启确认弹窗 -->
+    <div class="overlay" id="restart-confirm" style="display:none;">
+      <h2>重新开始?</h2>
+      <div class="lead">当前进度会丢失,回到角色选择页。</div>
+      <div class="btn-row">
+        <button id="btn-restart-confirm">确 定</button>
+        <button id="btn-restart-cancel" class="secondary-btn">取 消</button>
+      </div>
+    </div>
   </div>
 </div>
 
+<script>
+  (function() {
+    const m = document.getElementById('restart-confirm');
+    document.getElementById('btn-restart').onclick = () => { m.style.display = 'flex'; };
+    document.getElementById('btn-restart-cancel').onclick = () => { m.style.display = 'none'; };
+    document.getElementById('btn-restart-confirm').onclick = () => { location.reload(); };
+  })();
+</script>
 <script type="module" src="src/main.js"></script>
 </body>
 </html>
