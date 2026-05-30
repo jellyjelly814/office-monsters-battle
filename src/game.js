@@ -42,11 +42,14 @@ function pickByWeights(weights) {
 }
 
 export class Game {
-  constructor(canvas, images) {
+  constructor(canvas, images, callbacks = {}) {
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d');
     this.ctx.imageSmoothingEnabled = false;
     this.images = images || {};
+    this.onStateChange = callbacks.onStateChange || (() => {});
+    this.onChaosChange = callbacks.onChaosChange || (() => {});
+    this._audioChaosOn = false;
 
     this.state = 'idle';
     this.elapsed = 0;
@@ -164,6 +167,10 @@ export class Game {
     const now = this.elapsed;
 
     const inChaos = this._isInChaos();
+    if (inChaos !== this._audioChaosOn) {
+      this._audioChaosOn = inChaos;
+      this.onChaosChange(inChaos);
+    }
     if (!inChaos && this.player.forcedInvul) {
       this.player.forcedInvul = false;
     }
@@ -225,8 +232,13 @@ export class Game {
     this.flashTexts = this.flashTexts.filter(f => f.until > now);
     this.coffeeAnims = this.coffeeAnims.filter(a => now - a.startTime < a.duration);
 
-    if (this.player.isDead()) this.state = 'lose';
-    else if (this.elapsed >= GAME_DURATION) this.state = 'win';
+    if (this.player.isDead()) {
+      this.state = 'lose';
+      this.onStateChange('lose');
+    } else if (this.elapsed >= GAME_DURATION) {
+      this.state = 'win';
+      this.onStateChange('win');
+    }
   }
 
   _updateCoffeeMachine(now) {

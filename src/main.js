@@ -9,6 +9,7 @@ import { Game } from './game.js';
 import { setEnemySprites } from './enemy.js';
 import { setJoystick } from './input.js';
 import { Joystick } from './joystick.js';
+import { audio } from './audio.js';
 import { CANVAS_W, CANVAS_H, WEAPON, ENEMY_B1, ENEMY_B2, ENEMY_B3, ENEMY_B4 } from './balance.js';
 
 const canvas = document.getElementById('game-canvas');
@@ -46,6 +47,12 @@ const game = new Game(canvas, {
   coffee: coffeeImage,
   resignation: resignationImage,
   // player 通过 game.start(playerSprite, winUrl) 在选择后传入
+}, {
+  onStateChange: (state) => {
+    if (state === 'win') audio.play('win');
+    else if (state === 'lose') audio.play('lose');
+  },
+  onChaosChange: (on) => audio.setChaos(on),
 });
 
 // 覆盖层
@@ -63,6 +70,7 @@ function startGame(charKey) {
   selectedChar = charKey;
   startOverlay.style.display = 'none';
   endOverlay.style.display = 'none';
+  audio.play('progress');
   game.start(profile.idle, profile.winUrl, profile.loseUrl);
 }
 
@@ -85,14 +93,22 @@ if (startBtn) {
 
 // 再来一把（沿用上次选的角色）
 replayBtn.addEventListener('click', () => {
-  endOverlay.style.display = 'none';
   if (selectedChar) {
-    const profile = CHAR_PROFILES[selectedChar];
-    game.start(profile.idle, profile.winUrl, profile.loseUrl);
+    startGame(selectedChar);
   } else {
+    endOverlay.style.display = 'none';
     startOverlay.style.display = 'flex';
   }
 });
+
+// 首次用户手势 → 解锁 audio + 播放初始化界面 BGM
+const unlockAudio = () => {
+  audio.unlock();
+  if (!audio.current) audio.play('intro');
+};
+document.addEventListener('click', unlockAudio, { once: true });
+document.addEventListener('touchstart', unlockAudio, { once: true });
+document.addEventListener('keydown', unlockAudio, { once: true });
 
 // 启动前预览背景
 bgImage.onload = () => {
