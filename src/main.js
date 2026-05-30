@@ -110,6 +110,25 @@ document.addEventListener('click', unlockAudio, { once: true });
 document.addEventListener('touchstart', unlockAudio, { once: true });
 document.addEventListener('keydown', unlockAudio, { once: true });
 
+// 重启按钮 + 确认弹窗(弹窗期间 BGM 暂停,关闭后从断点继续)
+const restartBtn = document.getElementById('btn-restart');
+const restartModal = document.getElementById('restart-confirm');
+const restartConfirmBtn = document.getElementById('btn-restart-confirm');
+const restartCancelBtn = document.getElementById('btn-restart-cancel');
+if (restartBtn && restartModal) {
+  restartBtn.addEventListener('click', () => {
+    restartModal.style.display = 'flex';
+    audio.pause();
+  });
+  restartCancelBtn.addEventListener('click', () => {
+    restartModal.style.display = 'none';
+    audio.resume();
+  });
+  restartConfirmBtn.addEventListener('click', () => {
+    location.reload();
+  });
+}
+
 // 启动前预览背景
 bgImage.onload = () => {
   const ctx = canvas.getContext('2d');

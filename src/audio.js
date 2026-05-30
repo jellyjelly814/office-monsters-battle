@@ -33,6 +33,7 @@ class AudioManager {
     this.current = null;          // 'intro' | 'progress' | 'win' | 'lose' | null
     this.unlocked = false;
     this.pendingTrack = null;     // 解锁前调 play() 时记下,解锁后补播
+    this._wasPaused = false;      // pause() 设 true,resume() 才执行(避免误 resume)
   }
 
   unlock() {
@@ -68,6 +69,21 @@ class AudioManager {
   setChaos(on) {
     const el = this.elements.progress;
     if (el) el.playbackRate = on ? 1.5 : 1.0;
+  }
+
+  pause() {
+    if (this.current && this.elements[this.current]) {
+      this.elements[this.current].pause();
+      this._wasPaused = true;
+    }
+  }
+
+  resume() {
+    if (!this._wasPaused) return;
+    this._wasPaused = false;
+    if (this.current && this.elements[this.current]) {
+      this.elements[this.current].play().catch(err => console.warn('[audio] resume failed:', err));
+    }
   }
 }
 
