@@ -322,9 +322,113 @@
     color: #fff !important;
   }
   .btn-row { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; }
+
+  /* ============================================
+   * 移动端竖屏强提示(orientation: portrait)
+   * ============================================ */
+  #portrait-warning {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: #0a0a0a;
+    z-index: 9999;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 40px 24px;
+    color: #ffe000;
+  }
+  #portrait-warning .rotate-icon {
+    font-size: 80px;
+    animation: rotate-hint 1.6s ease-in-out infinite;
+    margin-bottom: 24px;
+  }
+  #portrait-warning .pw-title {
+    font-size: 28px;
+    font-weight: 900;
+    letter-spacing: 4px;
+    text-shadow: 2px 2px 0 #000;
+    margin-bottom: 12px;
+  }
+  #portrait-warning .pw-sub {
+    color: #aaa;
+    font-size: 14px;
+    line-height: 1.6;
+    max-width: 320px;
+  }
+  @keyframes rotate-hint {
+    0%, 100% { transform: rotate(-15deg); }
+    50%      { transform: rotate(75deg); }
+  }
+  /* 只在手机(小屏)竖屏时显示 — 大屏(平板/桌面)即使竖屏也不挡 */
+  @media (orientation: portrait) and (max-width: 900px) {
+    #portrait-warning { display: flex; }
+  }
+
+  /* ============================================
+   * 手机横屏紧凑布局(viewport 高度 < 600px 且 landscape)
+   * 思路:吃满 100vh,header 极简,overlay 元素尺寸全部缩小
+   * ============================================ */
+  @media (max-height: 600px) and (orientation: landscape) {
+    body { padding: 0; min-height: 100vh; }
+    .wrap { max-width: 100%; padding: 0; }
+    .header {
+      padding: 4px 12px 2px;
+      margin-bottom: 0;
+      font-size: 11px;
+      gap: 8px;
+    }
+    .header h1 { font-size: 13px; }
+    .header .hint { display: none; }
+    .restart-btn { width: 24px; height: 24px; font-size: 14px; border-width: 1px; }
+    .game-wrap {
+      aspect-ratio: auto;
+      width: 100vw;
+      height: calc(100vh - 28px);
+      border-width: 1px;
+    }
+
+    /* start-overlay 紧凑 */
+    #start-overlay { gap: 8px; padding: 8px; }
+    .game-title { font-size: clamp(22px, 4.5vw, 32px); letter-spacing: 3px; }
+    .game-subtitle { font-size: 11px; margin: -2px 0 2px; }
+    .section-label { font-size: 10px; letter-spacing: 1px; margin-bottom: 4px; }
+    .start-body { gap: 10px; padding: 0 8px; max-width: 100%; }
+    .char-row { gap: 14px; }
+    .char-btn { padding: 6px 12px 8px; gap: 4px; border-width: 2px; border-radius: 8px; }
+    .char-btn img { width: 60px; }
+    .char-btn span { font-size: 12px; }
+    .enemy-side { gap: 6px; }
+    .enemy-card { padding: 3px 6px 4px; gap: 1px; border-radius: 6px; }
+    .enemy-card img { width: 44px; }
+    .enemy-card span { font-size: 9px; letter-spacing: 0; }
+    .hint-line { font-size: 10px; line-height: 1.4; max-width: 100%; padding: 0 12px; }
+    .primary-btn { padding: 8px 32px; font-size: 16px; letter-spacing: 2px; border-radius: 6px; box-shadow: 0 3px 0 #aa8800; }
+
+    /* end-overlay 紧凑 */
+    .end-row { gap: 14px; padding: 0 10px; }
+    .end-figure { width: 130px; }
+    .end-center { gap: 8px; max-width: 320px; }
+    .overlay h2 { font-size: 22px; margin-bottom: 2px; }
+    .overlay .lead { font-size: 12px; padding: 0 8px; }
+    .overlay .detail { font-size: 13px; line-height: 1.6; }
+    .overlay button { padding: 8px 22px; font-size: 14px; }
+    #end-taunt { font-size: 14px; max-width: 320px; }
+
+    /* 重启确认弹窗紧凑 */
+    #restart-confirm { gap: 10px; padding: 12px; }
+  }
 </style>
 </head>
 <body>
+<!-- 手机竖屏强提示 -->
+<div id="portrait-warning">
+  <div class="rotate-icon">📱</div>
+  <div class="pw-title">请 横 屏 游 玩</div>
+  <div class="pw-sub">职场牛鬼蛇神大作战是 16:9 横屏游戏 ·<br>把手机转过来才能正常体验</div>
+</div>
+
 <div class="wrap">
   <div class="header">
     <h1>职场牛鬼蛇神大作战</h1>
