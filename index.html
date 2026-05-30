@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>职场牛鬼蛇神大作战</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #1a1a1a;
+    color: #ddd;
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+
+  .wrap {
+    position: relative;
+    width: 100%;
+    max-width: 1408px;
+  }
+
+  .header {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 8px;
+    font-size: 13px;
+  }
+  .header h1 { font-size: 16px; color: #6ec; font-weight: 600; }
+  .header .hint { color: #888; }
+
+  .game-wrap {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1408 / 752;
+    border: 2px solid #444;
+    background: #000;
+    overflow: hidden;
+  }
+
+  canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+  }
+
+  .overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.78);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    text-align: center;
+    z-index: 10;
+  }
+  .overlay h2 {
+    font-size: clamp(20px, 4vw, 38px);
+    margin-bottom: 6px;
+  }
+  .overlay .lead { color: #ccc; max-width: 460px; line-height: 1.6; font-size: 14px; padding: 0 16px; }
+  .overlay .detail { color: #ddd; font-size: 16px; line-height: 2; }
+  .overlay button {
+    background: #ffcc00;
+    color: #1a1a1a;
+    border: none;
+    padding: 12px 32px;
+    font-size: 18px;
+    font-weight: 700;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .overlay button:hover { background: #fff; }
+
+  /* === 开始页（v2.8 重构）=== */
+  #start-overlay {
+    background:
+      linear-gradient(rgba(0, 0, 0, 0.72), rgba(0, 0, 0, 0.72)),
+      url('assets/workspace.png') center/cover no-repeat;
+    gap: 18px;
+    padding: 24px 16px;
+  }
+  .game-title {
+    font-size: clamp(34px, 6vw, 64px);
+    font-weight: 900;
+    color: #ffe000;
+    text-shadow:
+      0 0 24px rgba(255, 224, 0, 0.6),
+      3px 3px 0 #000, -3px -3px 0 #000, 3px -3px 0 #000, -3px 3px 0 #000;
+    letter-spacing: 6px;
+    margin: 0;
+  }
+  .game-subtitle {
+    color: #ddd;
+    font-size: 16px;
+    margin-top: -6px;
+    margin-bottom: 4px;
+  }
+  .section-label {
+    color: #ffcc66;
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 14px;
+    letter-spacing: 2px;
+  }
+
+  /* 中央三列布局: 左敌人 | 中角色 | 右敌人 */
+  .start-body {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 36px;
+    align-items: center;
+    width: 100%;
+    max-width: 1100px;
+    padding: 0 24px;
+    box-sizing: border-box;
+  }
+  .enemy-side {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+  }
+  .start-center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* 角色选择卡片（中央,放大）*/
+  .char-row { display: flex; gap: 36px; justify-content: center; flex-wrap: wrap; }
+  .char-btn {
+    background: rgba(255,255,255,0.08);
+    border: 3px solid #555;
+    border-radius: 12px;
+    padding: 14px 24px 16px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    font-family: inherit;
+    transition: all 0.15s ease;
+    color: #fff;
+  }
+  .char-btn:hover {
+    border-color: #ffcc00;
+    background: rgba(255,204,0,0.18);
+    transform: scale(1.06);
+  }
+  .char-btn:hover img { filter: brightness(1.15); }
+  .char-btn.selected {
+    border-color: #ffe000;
+    background: rgba(255, 224, 0, 0.30);
+    box-shadow: 0 0 32px rgba(255, 224, 0, 0.6);
+  }
+  .char-btn img {
+    width: 130px;          /* 90 → 130,中央放大 */
+    height: auto;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+  }
+  .char-btn span {
+    font-weight: 700;
+    font-size: 16px;
+    color: #fff;
+  }
+
+  /* 敌人侧栏（左右各 2 个）*/
+  .enemy-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    background: rgba(20, 20, 20, 0.65);
+    padding: 8px 14px 10px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 100, 100, 0.4);
+  }
+  .enemy-card img {
+    width: 76px;
+    height: auto;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+  }
+  .enemy-card span {
+    color: #ff9999;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1px;
+  }
+
+  /* 操作提示 */
+  .hint-line {
+    color: #aaa;
+    font-size: 13px;
+    max-width: 600px;
+    text-align: center;
+    line-height: 1.6;
+  }
+  .hint-line b { color: #ddd; }
+
+  /* 主行动按钮（亮黄 + 放大）*/
+  .primary-btn {
+    background: linear-gradient(180deg, #fff200 0%, #ffcc00 100%);
+    color: #1a1a1a;
+    border: none;
+    padding: 16px 60px;
+    font-size: 24px;
+    font-weight: 900;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: inherit;
+    letter-spacing: 4px;
+    transition: all 0.15s ease;
+    box-shadow: 0 5px 0 #aa8800, 0 0 20px rgba(255, 242, 0, 0.4);
+  }
+  .primary-btn:hover:not(:disabled) {
+    background: linear-gradient(180deg, #ffff66 0%, #fff200 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 7px 0 #aa8800, 0 0 32px rgba(255, 242, 0, 0.7);
+  }
+  .primary-btn:active:not(:disabled) {
+    transform: translateY(3px);
+    box-shadow: 0 2px 0 #aa8800, 0 0 12px rgba(255, 242, 0, 0.5);
+  }
+  .primary-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    box-shadow: 0 5px 0 #555;
+  }
+
+  /* 窄屏 fallback: 左右敌人栏改横排 */
+  @media (max-width: 760px) {
+    .start-body {
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+    .enemy-side {
+      flex-direction: row;
+      justify-content: center;
+    }
+  }
+
+  /* 结算页左右图 + 中央文字三列布局（左 enemy / 中 文案 / 右 player）*/
+  .end-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 40px;
+    flex-wrap: wrap;
+    width: 100%;
+    padding: 0 32px;
+    box-sizing: border-box;
+  }
+  .end-figure {
+    width: 300px;
+    height: auto;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+    flex-shrink: 0;
+  }
+  .end-center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+    max-width: 480px;
+  }
+  /* 失败反讽台词（紧跟在标题下方,大字黄色粗体）*/
+  #end-taunt {
+    color: #ffcc00;
+    font-size: 26px;
+    font-weight: 700;
+    line-height: 1.4;
+    max-width: 480px;
+    margin-top: -4px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="header">
+    <h1>职场牛鬼蛇神大作战</h1>
+    <span class="hint">AI 提效 VS 职场牛鬼蛇神 ·  60s，AI 替你把班味打下去！</span>
+  </div>
+  <div class="game-wrap">
+    <canvas id="game-canvas"></canvas>
+
+    <!-- 启动覆盖层 -->
+    <div class="overlay" id="start-overlay">
+      <div class="game-title">职场牛鬼蛇神大作战</div>
+      <div class="game-subtitle">60 秒办公室生存 · AI 替你把班味打下去</div>
+
+      <div class="start-body">
+        <!-- 左侧两只敌人 -->
+        <div class="enemy-side">
+          <div class="enemy-card"><img src="assets/enemy_b1.png" alt="绩效面谈"><span>绩效面谈</span></div>
+          <div class="enemy-card"><img src="assets/enemy_b2.png" alt="画饼大师"><span>画饼大师</span></div>
+        </div>
+
+        <!-- 中央：角色选择 -->
+        <div class="start-center">
+          <div class="section-label">▼ 选你的打工人形象 ▼</div>
+          <div class="char-row">
+            <button class="char-btn" data-char="man">
+              <img src="assets/player-man.png" alt="打工男">
+              <span>打工男</span>
+            </button>
+            <button class="char-btn" data-char="woman">
+              <img src="assets/player-woman.png" alt="打工女">
+              <span>打工女</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 右侧两只敌人 -->
+        <div class="enemy-side">
+          <div class="enemy-card"><img src="assets/enemy_b3.png" alt="遇事甩锅"><span>遇事甩锅</span></div>
+          <div class="enemy-card"><img src="assets/enemy_b4.png" alt="死催进度"><span>死催进度</span></div>
+        </div>
+      </div>
+
+      <div class="hint-line">
+        <b>拖动滑杆</b> 或 <b>键盘 WASD / 方向键</b> 走位 · <b>AI 小队</b>自动开火<br>
+        撑过 60 秒 = 准点下班 · <b>Token 耗尽</b>倒下 = 加班到天亮
+      </div>
+
+      <button id="btn-start" class="primary-btn" disabled>开 始 游 戏</button>
+    </div>
+
+    <!-- 结算覆盖层 -->
+    <div class="overlay" id="end-overlay" style="display:none;">
+      <div class="end-row">
+        <img id="end-enemy" class="end-figure" src="" alt="" style="display:none;">
+        <div class="end-center">
+          <h2 id="end-title"></h2>
+          <div id="end-taunt" style="display:none;"></div>
+          <div class="detail" id="end-detail"></div>
+          <button id="btn-replay">再来一把</button>
+        </div>
+        <img id="end-player" class="end-figure" src="" alt="" style="display:none;">
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="src/main.js"></script>
+</body>
+</html>
